@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎟️ Book Event Tickets</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; color: #333; margin-bottom: 20px; }
+    label { display: block; margin-top: 15px; font-weight: bold; color: #555; }
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover { background: #0056b3; }
+    #result {
+      margin-top: 30px;
+      padding: 15px;
+      border-radius: 6px;
+      display: none;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+    .nav { text-align: center; margin-top: 20px; }
+    .nav a { color: #007bff; text-decoration: none; margin: 0 10px; }
+    .nav a:hover { text-decoration: underline; }
+    .loading { color: #6c757d; font-style: italic; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🎟️ Book Your Ticket</h2>
+
+    <form id="bookingForm">
+      <label for="userId">Your User ID</label>
+      <input type="number" name="userId" placeholder="e.g., 1 (after registering)" required>
+
+      <label for="eventId">Select Event</label>
+      <select name="eventId" id="eventSelect" required>
+        <option value="">⏳ Loading events...</option>
+      </select>
+
+      <label for="tickets">Number of Tickets</label>
+      <input type="number" name="tickets" min="1" placeholder="How many tickets?" required>
+
+      <button type="submit">✅ Book Now</button>
+    </form>
+
+    <div id="result"></div>
+
+    <div class="nav">
+      <a href="/index.html">🏠 Home</a> |
+      <a href="/register.html">📝 Register</a> |
+      <a href="/login.html">🔑 Login</a>
+    </div>
+  </div>
+
+  <script>
+    // Load events from backend into dropdown
+    async function loadEvents() {
+      try {
+        const res = await fetch('/events');
+        if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to load events`);
+
+        const events = await res.json();
+        const select = document.getElementById('eventSelect');
+
+        select.innerHTML = '<option value="">-- Please select an event --</option>';
+
+        if (events.length === 0) {
+          select.innerHTML += '<option disabled>📭 No events available yet</option>';
+          return;
+        }
+
+        events.forEach(event => {
+          const option = document.createElement('option');
+          option.value = event.id;
+          option.textContent = `${event.name} | 📅 ${event.date} | 💰 Rs.${event.price} | 📍 ${event.location}`;
+          select.appendChild(option);
+        });
+
+      } catch (err) {
+        console.error("Error loading events:", err);
+        const select = document.getElementById('eventSelect');
+        select.innerHTML = '<option>❌ Error loading events. Check console.</option>';
+      }
+    }
+
+    // Handle booking form submission
+    document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = '';
+      resultDiv.style.display = 'none';
+
+      const formData = new FormData(e.target);
+      const bookingData = {
+        userId: parseInt(formData.get('userId')),
+        eventId: parseInt(formData.get('eventId')),
+        tickets: parseInt(formData.get('tickets'))
+      };
+
+      // Validate inputs
+      if (!bookingData.userId || !bookingData.eventId || !bookingData.tickets) {
+        showError("⚠️ Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const res = await fetch('/bookings/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(bookingData)
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showSuccess(`🎉 Booking Confirmed!\nBooking ID: ${data.booking.bookingId}\nStatus: ${data.booking.status}\nTickets: ${data.booking.tickets}`);
+        } else {
+          showError(`❌ Failed: ${data.error || 'Unknown error'}`);
+        }
+
+      } catch (err) {
+        showError(`⚠️ Network Error: ${err.message}`);
+      }
+    });
+
+    function showSuccess(message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = message;
+      resultDiv.className = 'success';
+      resultDiv.style.display = 'block';
+    }
+
+    function showError(message) {
+      const resultDiv = document.getElementById('result');
+      resultDiv.textContent = message;
+      resultDiv.className = 'error';
+      resultDiv.style.display = 'block';
+    }
+
+    // Load events when page is ready
+    window.addEventListener('DOMContentLoaded', loadEvents);
+  </script>
+  <!-- ⚠️ TEMPORARY: Quick Add Event Button (for testing only) -->
+<div style="text-align:center; margin-top:40px; padding:20px; background:#fff3cd; border-radius:8px;">
+    <h3>🔧 Quick Add Test Events (Admin)</h3>
+    <button onclick="addTestEvent('Tech Conference', '2025-07-10', 'Colombo', 2500)">➕ Add Tech Conference</button>
+    <button onclick="addTestEvent('Music Fest', '2025-08-20', 'Kandy', 1800)">➕ Add Music Fest</button>
+    <button onclick="addTestEvent('Food Expo', '2025-09-05', 'Galle', 1200)">➕ Add Food Expo</button>
+  </div>
+  
+  <script>
+    async function addTestEvent(name, date, location, price) {
+      const eventData = { name, date, location, price };
+  
+      try {
+        const res = await fetch('/events/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(eventData)
+        });
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          alert(`✅ Event Added: ${name}\nID: ${data.event.id}`);
+          loadEvents(); // Reload dropdown
+        } else {
+          alert(`❌ Failed: ${data.error}`);
+        }
+      } catch (err) {
+        alert(`⚠️ Error: ${err.message}`);
+      }
+    }
+  </script>
+</body>
+</html>

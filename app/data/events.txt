@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Tech Conference",
+    "date": "2025-07-10",
+    "location": "Colombo",
+    "price": 2500
+  },
+  {
+    "id": 2,
+    "name": "Music Fest",
+    "date": "2025-08-20",
+    "location": "Kandy",
+    "price": 1800
+  },
+  {
+    "id": 3,
+    "name": "Food Expo",
+    "date": "2025-09-05",
+    "location": "Galle",
+    "price": 1200
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "bookingId": 1,
+    "userId": 1,
+    "eventId": 1,
+    "tickets": 5,
+    "status": "pending"
+  },
+  {
+    "bookingId": 2,
+    "userId": 2,
+    "eventId": 2,
+    "tickets": 9,
+    "status": "pending"
+  }
+]
